@@ -5,7 +5,7 @@ export nested
 # find the symbol to invoke MultiNest
 function nested_symbol()
 	nestdl = dlopen(libmultinest)
-	for sym in [ :__nested_MOD_nestrun, :nested_mp_nestrun_ ]
+	for sym in [ :__nested_MOD_nestrun, :nested_mp_nestrun_, :nested_mock ]
 		if dlsym_e(nestdl, sym) != C_NULL
 			dlclose(nestdl)
 			return sym
