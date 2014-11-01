@@ -11,8 +11,7 @@ Installation
 
 The package does not contain MultiNest itself (as you need to register before
 you can obtain a copy), so you will need to download and build *shared* 
-MultiNest libraries separately and install them in a place where Julia can find
-them.
+MultiNest libraries separately.
 
 Afterwards, you can get a copy of `MultiNest.jl` by cloning it from Julia's
 package manager:
@@ -46,3 +45,14 @@ nested(loglike, 2, "chains/example-")
 
 All of MultiNest's options can be passed as keyword arguments. Please see the
 classical [eggbox example](examples/eggbox.jl) for more information.
+
+If Julia cannot find the MultiNest libraries by default, you can make their
+location known as follows:
+
+```julia
+# make library location known
+push!(DL_LOAD_PATH, "/path/to/MultiNest")
+
+# now load MultiNest module
+using MultiNest
+```

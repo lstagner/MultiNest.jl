@@ -2,6 +2,26 @@ module MultiNest
 
 export nested
 
+# find the symbol to invoke MultiNest
+function nested_symbol()
+	nestdl = dlopen(libmultinest)
+	for sym in [ :__nested_MOD_nestrun, :nested_mp_nestrun_ ]
+		if dlsym_e(nestdl, sym) != C_NULL
+			dlclose(nestdl)
+			return sym
+		end
+	end
+	dlclose(nestdl)
+	error("cannot link to MultiNest libraries, check symbol table")
+end
+
+# find library for MultiNest
+const libmultinest = find_library([ "libmultinest", "libnest3" ], [ "" ])
+
+# find symbol that runs MultiNest
+const nestrun = nested_symbol()
+
+# convert to Fortran logical
 logical(x) = bool(x) ? Cint(1) : Cint(0)
 
 function no_dumper(
@@ -74,64 +94,67 @@ type Context
 	end
 end
 
-function nested(
-	loglike::Function,
-	ndim::Integer,
-	root::String;
-	ins = true,
-	mmodal = true,
-	ceff = false,
-	nlive = 1000,
-	tol = 0.5,
-	efr = 0.8,
-	npar = ndim,
-	nclspar = npar,
-	maxmodes = 100,
-	updint = 1000,
-	ztol = -1E90,
-	seed = -1,
-	wrap = false,
-	fb = true,
-	resume = false,
-	outfile = true,
-	initmpi = true,
-	logzero = nextfloat(-Inf),
-	maxiter = 0,
-	dumper::Function = no_dumper,
-	context::Any = nothing
-)
-	ins_c = logical(ins)
-	mmodal_c = logical(mmodal)
-	ceff_c = logical(ceff)
-	root_c = rpad(root, 100, ' ')
-	wrap_c = ndims(wrap) == 0 ? fill(logical(wrap), ndim) : map(logical, wrap)
-	fb_c = logical(fb)
-	resume_c = logical(resume)
-	outfile_c = logical(outfile)
-	initmpi_c = logical(initmpi)
-	
-	loglike_c = cfunction(nested_loglike, Void, ( Ptr{Cdouble}, Ptr{Cint},
-		Ptr{Cint}, Ptr{Cdouble}, Ptr{Void} ))
-	
-	dumper_c = cfunction(nested_dumper, Void, ( Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
-		Ptr{Ptr{Cdouble}}, Ptr{Ptr{Cdouble}}, Ptr{Ptr{Cdouble}}, Ptr{Cdouble},
-		Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Void} ))
-	
-	context_c = Context(loglike, dumper, context)
-	
-	ccall(
-		( :__nested_MOD_nestrun, :libmultinest ),
-		Void,
-		( Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cdouble},
+@eval begin
+	function nested(
+		loglike::Function,
+		ndim::Integer,
+		root::String;
+		ins = true,
+		mmodal = true,
+		ceff = false,
+		nlive = 1000,
+		tol = 0.5,
+		efr = 0.8,
+		npar = ndim,
+		nclspar = npar,
+		maxmodes = 100,
+		updint = 1000,
+		ztol = -1E90,
+		seed = -1,
+		wrap = false,
+		fb = true,
+		resume = false,
+		outfile = true,
+		initmpi = true,
+		logzero = nextfloat(-Inf),
+		maxiter = 0,
+		dumper::Function = no_dumper,
+		context::Any = nothing
+	)
+		ins_c = logical(ins)
+		mmodal_c = logical(mmodal)
+		ceff_c = logical(ceff)
+		root_c = rpad(root, 100, ' ')
+		wrap_c = ndims(wrap) == 0 ? fill(logical(wrap), ndim) : map(logical, wrap)
+		fb_c = logical(fb)
+		resume_c = logical(resume)
+		outfile_c = logical(outfile)
+		initmpi_c = logical(initmpi)
+		
+		loglike_c = cfunction(nested_loglike, Void, (
+			Ptr{Cdouble}, Ptr{Cint}, Ptr{Cint}, Ptr{Cdouble}, Ptr{Void}
+		))
+		
+		dumper_c = cfunction(nested_dumper, Void, (
+			Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Ptr{Cdouble}},
+			Ptr{Ptr{Cdouble}}, Ptr{Ptr{Cdouble}}, Ptr{Cdouble},
+			Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Void}
+		))
+		
+		context_c = Context(loglike, dumper, context)
+		
+		ccall(($(string(nestrun)), libmultinest), Void,
+			( Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cdouble},
 			Ptr{Cdouble}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
 			Ptr{Cint}, Ptr{Cdouble}, Ptr{Uint8}, Ptr{Cint}, Ptr{Cint},
 			Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cdouble},
 			Ptr{Cint}, Ptr{Void}, Ptr{Void}, Any ),
-		&ins_c, &mmodal_c, &ceff_c, &nlive, &tol, &efr, &ndim, &npar, &nclspar,
-		&maxmodes, &updint, &ztol, root_c, &seed, pointer(wrap_c), &fb_c,
-		&resume_c, &outfile_c, &initmpi_c, &logzero, &maxiter,
-		loglike_c, dumper_c, context_c
-	)
+			&ins_c, &mmodal_c, &ceff_c, &nlive, &tol, &efr, &ndim, &npar,
+			&nclspar, &maxmodes, &updint, &ztol, root_c, &seed,
+			pointer(wrap_c), &fb_c, &resume_c, &outfile_c, &initmpi_c,
+			&logzero, &maxiter, loglike_c, dumper_c, context_c
+		)
+	end
 end
 
 end
