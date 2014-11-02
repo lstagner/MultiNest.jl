@@ -24,19 +24,6 @@ const nestrun = nested_symbol()
 # convert to Fortran logical
 logical(x) = bool(x) ? Cint(1) : Cint(0)
 
-function no_dumper(
-	physlive::Array{Cdouble, 2},
-	posterior::Array{Cdouble, 2},
-	paramconstr::Array{Cdouble, 2},
-	maxloglike::Cdouble,
-	logz::Cdouble,
-	inslogz::Cdouble,
-	logzerr::Cdouble,
-	context = nothing
-)
-	# noop
-end
-
 function nested_loglike(
 	cube_::Ptr{Cdouble},
 	ndim_::Ptr{Cint},
@@ -48,7 +35,7 @@ function nested_loglike(
 	npar = unsafe_load(npar_)
 	cube = pointer_to_array(cube_, npar)
 	context = unsafe_pointer_to_objref(context_)::Context
-	lnew = context.loglike(cube)
+	lnew = context.loglike(cube, context.context...)
 	unsafe_store!(lnew_, lnew)
 	return nothing
 end
@@ -77,21 +64,27 @@ function nested_dumper(
 	inslogz = unsafe_load(inslogz_)
 	logzerr = unsafe_load(logzerr_)
 	context = unsafe_pointer_to_objref(context_)::Context
-	context.dumper(physlive, posterior, paramconstr, maxloglike, logz, inslogz, logzerr)
+	context.dumper(physlive, posterior, paramconstr, maxloglike, logz, inslogz, logzerr, context.context...)
 	return nothing
 end
 
-type Context
+function default_dumper(
+	physlive::Array{Cdouble, 2},
+	posterior::Array{Cdouble, 2},
+	paramconstr::Array{Cdouble, 2},
+	maxloglike::Cdouble,
+	logz::Cdouble,
+	inslogz::Cdouble,
+	logzerr::Cdouble,
+	context...
+)
+	# noop
+end
+
+immutable Context
 	loglike::Function
 	dumper::Function
-	
-	function Context(l, d, c)
-		if c == nothing
-			new(l, d)
-		else
-			new((x...) -> l(x..., c), (x...) -> d(x..., c))
-		end
-	end
+	context
 end
 
 @eval begin
@@ -118,8 +111,8 @@ end
 		initmpi = true,
 		logzero = nextfloat(-Inf),
 		maxiter = 0,
-		dumper::Function = no_dumper,
-		context::Any = nothing
+		dumper::Function = default_dumper,
+		context = ()
 	)
 		ins_c = logical(ins)
 		mmodal_c = logical(mmodal)

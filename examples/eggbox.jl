@@ -76,7 +76,7 @@ end
 # run MultiNest
 # arguments are log-likelihood function, number of dimensions, output root
 # other MultiNest parameters are given as keywords and can be omitted
-nested(loglike, 2, "chains/eggbox_jl-",
+@time nested(loglike, 2, "chains/eggbox_jl-",
 	ins = true,
 	mmodal = false,
 	ceff = false,
@@ -91,7 +91,7 @@ nested(loglike, 2, "chains/eggbox_jl-",
 	wrap = false,
 	seed = -1,
 	fb = true,
-	resume = true,
+	resume = false,
 	outfile = true,
 	initmpi = true,
 	logzero = nextfloat(-Inf),

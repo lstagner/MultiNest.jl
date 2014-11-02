@@ -44,7 +44,9 @@ nested(loglike, 2, "chains/example-")
 ```
 
 All of MultiNest's options can be passed as keyword arguments. Please see the
-classical [eggbox example](examples/eggbox.jl) for more information.
+classical [eggbox example](examples/eggbox.jl) for more information. There is
+also an [eggbox with context example](examples/eggbox_context.jl) that shows
+how to pass custom context arguments to the log-likelihood and dumper functions.
 
 If Julia cannot find the MultiNest libraries by default, you can make their
 location known as follows:

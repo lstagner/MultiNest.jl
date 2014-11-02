@@ -16,10 +16,10 @@ using MultiNest
 # returns
 # log-likelihood
 
-function loglike(cube::Vector{Cdouble}, chi_0::Float64)
+function loglike(cube::Vector{Cdouble}, chi_0::Float64, p::Float64)
 	chi = chi_0
 	for i in 1:length(cube)
-		x = cube[i]*10pi
+		x = cube[i]*p*pi
 		chi *= cos(0.5x)
 		cube[i] = x
 	end
@@ -63,9 +63,10 @@ function dumper(
 	logz::Cdouble,
 	inslogz::Cdouble,
 	logzerr::Cdouble,
-	chi_0::Float64
+	chi_0::Float64,
+	p::Float64
 )
-	println("dumper for chi_0 = ", chi_0, " called after ", size(posterior, 1), " samples")
+	println("dumper for chi_0 = ", chi_0, " p = ", p, " called after ", size(posterior, 1), " samples")
 end
 
 
@@ -75,14 +76,15 @@ end
 
 ##### main program #####
 
-# initial value for chi in loglike, this is passed as context
+# initial values for chi and period in loglike, these are passed as arguments
 my_chi_0 = 2.0
+my_p = 20.
 
 # run MultiNest
 # arguments are log-likelihood function, number of dimensions, output root
 # other MultiNest parameters are given as keywords and can be omitted
 # see how the context is passed to MultiNest
-nested(loglike, 2, "chains/eggbox_context_jl-",
+@time nested(loglike, 2, "chains/eggbox_context_jl-",
 	ins = true,
 	mmodal = false,
 	ceff = false,
@@ -97,13 +99,13 @@ nested(loglike, 2, "chains/eggbox_context_jl-",
 	wrap = false,
 	seed = -1,
 	fb = true,
-	resume = true,
+	resume = false,
 	outfile = true,
 	initmpi = true,
 	logzero = nextfloat(-Inf),
 	maxiter = 0,
 	dumper = dumper,
-	context = my_chi_0
+	context = (my_chi_0, my_p)
 )
 
 #####
