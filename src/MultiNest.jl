@@ -2,23 +2,28 @@ module MultiNest
 
 export nested
 
-# find the symbol to invoke MultiNest
-function nested_symbol()
-	nestdl = dlopen(libmultinest)
-	for sym in [ :__nested_MOD_nestrun, :nested_mp_nestrun_, :nested_mock ]
-		if dlsym_e(nestdl, sym) != C_NULL
-			dlclose(nestdl)
-			return sym
-		end
-	end
-	dlclose(nestdl)
-	error("cannot link to MultiNest libraries, check symbol table")
+# find the MultiNest library
+function nested_library()
+	lib = find_library([ "libmultinest", "libnest3" ], ASCIIString[])
+	lib == "" && error("cannot find MultiNest library")
+	lib
 end
 
-# find library for MultiNest
-const libmultinest = find_library([ "libmultinest", "libnest3" ], [ "" ])
+# find the symbol to invoke MultiNest
+function nested_symbol()
+	nestdl = dlopen_e(libmultinest)
+	nestdl == C_NULL && error("cannot open MultiNest library")
+	for sym in [ :__nested_MOD_nestrun, :nested_mp_nestrun_, :nested_mock ]
+		dlsym_e(nestdl, sym) != C_NULL && (dlclose(nestdl); return sym)
+	end
+	dlclose(nestdl)
+	error("cannot link MultiNest library, check symbol table")
+end
 
-# find symbol that runs MultiNest
+# MultiNest library
+const libmultinest = nested_library()
+
+# symbol that runs MultiNest
 const nestrun = nested_symbol()
 
 # convert to Fortran logical

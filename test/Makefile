@@ -12,7 +12,7 @@ endif
 all: $(TARGET)
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) libmultinest-mock.o
 
 $(TARGET): libmultinest-mock.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ libmultinest-mock.c
