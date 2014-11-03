@@ -1,6 +1,6 @@
 .PHONY : clean
 
-CFLAGS = -fPIC -g
+CFLAGS = -fPIC
 LDFLAGS = -shared
 
 ifeq ($(shell uname), Darwin)
