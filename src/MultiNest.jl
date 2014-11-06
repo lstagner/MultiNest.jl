@@ -30,7 +30,7 @@ const libmultinest = nested_library()
 const nestrun = nested_symbol()
 
 # convert to Fortran logical
-logical(x) = bool(x) ? Cint(1) : Cint(0)
+logical(x) = bool(x) ? int32(1) : int32(0)
 
 function nested_loglike(
     cube_::Ptr{Cdouble},
