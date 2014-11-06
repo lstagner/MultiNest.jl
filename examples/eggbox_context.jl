@@ -17,13 +17,13 @@ using MultiNest
 # log-likelihood
 
 function loglike(cube::Vector{Cdouble}, chi_0::Float64, p::Float64)
-	chi = chi_0
-	for i in 1:length(cube)
-		x = cube[i]*p*pi
-		chi *= cos(0.5x)
-		cube[i] = x
-	end
-	(chi + 2)^5
+    chi = chi_0
+    for i in 1:length(cube)
+        x = cube[i]*p*pi
+        chi *= cos(0.5x)
+        cube[i] = x
+    end
+    (chi + 2)^5
 end
 
 #####
@@ -56,17 +56,17 @@ end
 # logzerr
 #     error on log evidence value
 function dumper(
-	physlive::Array{Cdouble, 2},
-	posterior::Array{Cdouble, 2},
-	paramconstr::Array{Cdouble, 2},
-	maxloglike::Cdouble,
-	logz::Cdouble,
-	inslogz::Cdouble,
-	logzerr::Cdouble,
-	chi_0::Float64,
-	p::Float64
+    physlive::Array{Cdouble, 2},
+    posterior::Array{Cdouble, 2},
+    paramconstr::Array{Cdouble, 2},
+    maxloglike::Cdouble,
+    logz::Cdouble,
+    inslogz::Cdouble,
+    logzerr::Cdouble,
+    chi_0::Float64,
+    p::Float64
 )
-	println("dumper for chi_0 = ", chi_0, " p = ", p, " called after ", size(posterior, 1), " samples")
+    println("dumper for chi_0 = ", chi_0, " p = ", p, " called after ", size(posterior, 1), " samples")
 end
 
 
@@ -85,27 +85,27 @@ my_p = 20.
 # other MultiNest parameters are given as keywords and can be omitted
 # see how the context is passed to MultiNest
 @time nested(loglike, 2, "chains/eggbox_context_jl-",
-	ins = true,
-	mmodal = false,
-	ceff = false,
-	nlive = 1000,
-	efr = 1.0,
-	tol = 0.1,
-	npar = 2,
-	nclspar = 2,
-	updint = 1000,
-	ztol = -1E90,
-	maxmodes = 100,
-	wrap = false,
-	seed = -1,
-	fb = true,
-	resume = false,
-	outfile = true,
-	initmpi = true,
-	logzero = nextfloat(-Inf),
-	maxiter = 0,
-	dumper = dumper,
-	context = (my_chi_0, my_p)
+    ins = true,
+    mmodal = false,
+    ceff = false,
+    nlive = 1000,
+    efr = 1.0,
+    tol = 0.1,
+    npar = 2,
+    nclspar = 2,
+    updint = 1000,
+    ztol = -1E90,
+    maxmodes = 100,
+    wrap = false,
+    seed = -1,
+    fb = true,
+    resume = false,
+    outfile = true,
+    initmpi = true,
+    logzero = nextfloat(-Inf),
+    maxiter = 0,
+    dumper = dumper,
+    context = (my_chi_0, my_p)
 )
 
 #####

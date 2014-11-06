@@ -16,13 +16,13 @@ using MultiNest
 # log-likelihood
 
 function loglike(cube::Vector{Cdouble})
-	chi = 1.0
-	for i in 1:length(cube)
-		x = cube[i]*10pi
-		chi *= cos(0.5x)
-		cube[i] = x
-	end
-	(chi + 2)^5
+    chi = 1.0
+    for i in 1:length(cube)
+        x = cube[i]*10pi
+        chi *= cos(0.5x)
+        cube[i] = x
+    end
+    (chi + 2)^5
 end
 
 #####
@@ -55,15 +55,15 @@ end
 # logzerr
 #     error on log evidence value
 function dumper(
-	physlive::Array{Cdouble, 2},
-	posterior::Array{Cdouble, 2},
-	paramconstr::Array{Cdouble, 2},
-	maxloglike::Cdouble,
-	logz::Cdouble,
-	inslogz::Cdouble,
-	logzerr::Cdouble
+    physlive::Array{Cdouble, 2},
+    posterior::Array{Cdouble, 2},
+    paramconstr::Array{Cdouble, 2},
+    maxloglike::Cdouble,
+    logz::Cdouble,
+    inslogz::Cdouble,
+    logzerr::Cdouble
 )
-	println("dumper called after ", size(posterior, 1), " samples")
+    println("dumper called after ", size(posterior, 1), " samples")
 end
 
 
@@ -77,26 +77,26 @@ end
 # arguments are log-likelihood function, number of dimensions, output root
 # other MultiNest parameters are given as keywords and can be omitted
 @time nested(loglike, 2, "chains/eggbox_jl-",
-	ins = true,
-	mmodal = false,
-	ceff = false,
-	nlive = 1000,
-	efr = 1.0,
-	tol = 0.1,
-	npar = 2,
-	nclspar = 2,
-	updint = 1000,
-	ztol = -1E90,
-	maxmodes = 100,
-	wrap = false,
-	seed = -1,
-	fb = true,
-	resume = false,
-	outfile = true,
-	initmpi = true,
-	logzero = nextfloat(-Inf),
-	maxiter = 0,
-	dumper = dumper
+    ins = true,
+    mmodal = false,
+    ceff = false,
+    nlive = 1000,
+    efr = 1.0,
+    tol = 0.1,
+    npar = 2,
+    nclspar = 2,
+    updint = 1000,
+    ztol = -1E90,
+    maxmodes = 100,
+    wrap = false,
+    seed = -1,
+    fb = true,
+    resume = false,
+    outfile = true,
+    initmpi = true,
+    logzero = nextfloat(-Inf),
+    maxiter = 0,
+    dumper = dumper
 )
 
 #####
