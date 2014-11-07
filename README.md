@@ -23,16 +23,22 @@ Pkg.clone("https://github.com/ntessore/MultiNest.jl.git")
 Usage
 -----
 
-The `MultiNest` package can be loaded into Julia with
+Since MultiNest, even though bundled as a library, is virtually an external
+command, the MultiNest.jl package follows the semantics of Julia's built-in
+external commands.
+
+The `MultiNest` module can be loaded into Julia with
 
 ```julia
 using MultiNest
 ```
 
-The `MultiNest` module exports a single function call `nested()` that will run
-the MultiNest algorithm for you. In it's purest form, `nested()` is invoked with
-the log-likelihood function you want to investigate, the dimension of the
-parameter space, and the root for output:
+It exports a single function new function, `nested()`, that will create a
+MultiNest configuation. Like other external commands, it can subsequently be
+invoked with Julia's `run()` function.
+
+In it's purest form, `nested()` is called with the log-likelihood function you
+want to investigate, the dimension of the parameter space, and the output root:
 
 ```julia
 using MultiNest
@@ -40,13 +46,20 @@ using MultiNest
 # define loglike
 # ...
 
-nested(loglike, 2, "chains/example-")
+# generate MultiNest call
+nest = nested(loglike, 2, "chains/example-")
+
+# run MultiNest
+run(nest)
 ```
 
-All of MultiNest's options can be passed as keyword arguments. Please see the
-classical [eggbox example](examples/eggbox.jl) for more information. There is
-also an [eggbox with context example](examples/eggbox_context.jl) that shows
-how to pass custom context arguments to the log-likelihood and dumper functions.
+All of MultiNest's additional options can be passed to `nested()` as keyword
+arguments. Please see the classical [eggbox example](examples/eggbox.jl) for
+more information.
+
+It is possible to pass additional arguments to your log-likelihood and dumper
+functions. See the [eggbox with context example](examples/eggbox_context.jl)
+for more information on context passing.
 
 If Julia cannot find the MultiNest libraries by default, you can make their
 location known as follows:

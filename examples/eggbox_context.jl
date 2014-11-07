@@ -80,11 +80,11 @@ end
 my_chi_0 = 2.0
 my_p = 20.
 
-# run MultiNest
+# create MultiNest configuration
 # arguments are log-likelihood function, number of dimensions, output root
 # other MultiNest parameters are given as keywords and can be omitted
 # see how the context is passed to MultiNest
-@time nested(loglike, 2, "chains/eggbox_context_jl-",
+nest = nested(loglike, 2, "chains/eggbox_context_jl-",
     ins = true,
     mmodal = false,
     ceff = false,
@@ -107,5 +107,8 @@ my_p = 20.
     dumper = dumper,
     context = (my_chi_0, my_p)
 )
+
+# run MultiNest
+@time run(nest)
 
 #####
