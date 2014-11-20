@@ -13,11 +13,11 @@ The package does not contain MultiNest itself (as you need to register before
 you can obtain a copy), so you will need to download and build *shared* 
 MultiNest libraries separately.
 
-Afterwards, you can get a copy of `MultiNest.jl` by cloning it from Julia's
+Afterwards, you can get a copy of `MultiNest.jl` using Julia's
 package manager:
 
 ```julia
-Pkg.clone("https://github.com/ntessore/MultiNest.jl.git")
+Pkg.add("MultiNest")
 ```
 
 Usage
