@@ -18,16 +18,16 @@ function nested_symbol()
     mpi = isdefined(module_parent(current_module()), :MULTINEST_MPI) && module_parent(current_module()).MULTINEST_MPI
     
     # try find library on DL_LOAD_PATH
-    lib = find_library(mpi ? names_mpi : names, ASCIIString[])
+    lib = Libdl.find_library(mpi ? names_mpi : names, ASCIIString[])
     lib == "" && error("cannot find MultiNest library")
     
     # now open library
-    dl = dlopen_e(lib)
+    dl = Libdl.dlopen_e(lib)
     dl == C_NULL && error("cannot open MultiNest library")
     
     # try to find symbol in library
     for sym in [ :__nested_MOD_nestrun, :nested_mp_nestrun_, :nested_mock ]
-        (nestrun_ptr = dlsym(dl, sym)) != C_NULL && return nestrun_ptr
+        (nestrun_ptr = Libdl.dlsym(dl, sym)) != C_NULL && return nestrun_ptr
     end
     
     # symbol not found
@@ -39,7 +39,7 @@ const nestrun_ptr = nested_symbol()
 
 # convert to Fortran logical
 macro logical(x)
-    :(convert(Cint, bool($x)))
+    :(convert(Cint, $x != 0))
 end
 
 # this holds all the information to run MultiNest
@@ -131,35 +131,42 @@ function default_dumper(
 end
 
 # wraparound can be given globally as Bool or as a vector for each dimension
-const Wrap = Union(Bool, Vector{Bool})
+const Wrap = Union{Bool, Vector{Bool}}
 
 # create a Nested object from the various options given
 function nested(
     loglike::Function,
     ndim::Integer,
-    root::String;
+    root::AbstractString;
     ins::Bool = true,
     mmodal::Bool = true,
     ceff::Bool = false,
     nlive::Integer = 1000,
-    tol::FloatingPoint = 0.5,
-    efr::FloatingPoint = 0.8,
+    tol::AbstractFloat = 0.5,
+    efr::AbstractFloat = 0.8,
     npar::Integer = ndim,
     nclspar::Integer = npar,
     maxmodes::Integer = 100,
     updint::Integer = 1000,
-    ztol::FloatingPoint = -1E90,
+    ztol::AbstractFloat = -1E90,
     seed::Integer = -1,
     wrap::Wrap = false,
     fb::Bool = true,
     resume::Bool = false,
     outfile::Bool = true,
     initmpi::Bool = true,
-    logzero::FloatingPoint = nextfloat(-Inf),
+    logzero::AbstractFloat = nextfloat(-Inf),
     maxiter::Integer = 0,
     dumper::Function = default_dumper,
     context = ()
-)
+    )
+
+    # create root dir if necessary (avoid Fortran runtime error)
+    root_dir = dirname(root)
+    if !isdir(root_dir)
+        mkdir(root_dir)
+    end
+    
     # convert arguments to the necessary representation
     ins_c = @logical ins
     mmodal_c = @logical mmodal
