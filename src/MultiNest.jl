@@ -27,15 +27,15 @@ function nested_symbol()
     
     # try to find symbol in library
     for sym in [ :__nested_MOD_nestrun, :nested_mp_nestrun_, :nested_mock ]
-        dlsym_e(dl, sym) != C_NULL && return sym
+        (nestrun_ptr = dlsym(dl, sym)) != C_NULL && return nestrun_ptr
     end
     
     # symbol not found
     error("cannot link MultiNest library, check symbol table")
 end
 
-# symbol that runs MultiNest
-const nestrun = nested_symbol()
+# pointer to function that runs MultiNest
+const nestrun_ptr = nested_symbol()
 
 # convert to Fortran logical
 macro logical(x)
@@ -202,7 +202,7 @@ end
             Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Void}
         ))
         
-        ccall($(string(nestrun)), Void, ( Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
+        ccall($nestrun_ptr, Void, ( Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
               Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cint}, Ptr{Cint},
               Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cdouble}, Ptr{Uint8},
               Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
