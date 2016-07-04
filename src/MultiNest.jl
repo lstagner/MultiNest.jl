@@ -1,7 +1,5 @@
 module MultiNest
 
-using Debug
-
 import Base: run
 
 export nested
