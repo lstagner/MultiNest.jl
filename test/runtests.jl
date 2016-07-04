@@ -1,6 +1,7 @@
 # build the mock dynamic library
 run(`make`)
 
+isdefined(:DL_LOAD_PATH) || (DL_LOAD_PATH = ASCIIString[])
 # put the mock MultiNest library on DL_LOAD_PATH
 push!(DL_LOAD_PATH, dirname(@__FILE__()))
 
