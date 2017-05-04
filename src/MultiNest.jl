@@ -10,26 +10,26 @@ export nested
 function nested_symbol()
     # common names for MultiNest library
     names = [ "libmultinest", "libnest3" ]
-    
+
     # names for library when compiled with MPI support
     names_mpi = [ "libmultinest_mpi", "libnest3_mpi" ]
-    
+
     # check whether `const MULTINEST_MPI = true` was defined in parent module
     mpi = isdefined(module_parent(current_module()), :MULTINEST_MPI) && module_parent(current_module()).MULTINEST_MPI
-    
+
     # try find library on DL_LOAD_PATH
-    lib = Libdl.find_library(mpi ? names_mpi : names, ASCIIString[])
+    lib = Libdl.find_library(mpi ? names_mpi : names, String[])
     lib == "" && error("cannot find MultiNest library")
-    
+
     # now open library
     dl = Libdl.dlopen_e(lib)
     dl == C_NULL && error("cannot open MultiNest library")
-    
+
     # try to find symbol in library
     for sym in [ :__nested_MOD_nestrun, :nested_mp_nestrun_, :nested_mock ]
         (nestrun_ptr = Libdl.dlsym(dl, sym)) != C_NULL && return nestrun_ptr
     end
-    
+
     # symbol not found
     error("cannot link MultiNest library, check symbol table")
 end
@@ -56,7 +56,7 @@ immutable Nested
     maxmodes::Cint
     updint::Cint
     ztol::Cdouble
-    root::ASCIIString
+    root::String
     seed::Cint
     wrap::Vector{Cint}
     fb::Cint
@@ -80,7 +80,7 @@ function nested_loglike(
 )
     ndim = unsafe_load(ndim_)
     npar = unsafe_load(npar_)
-    cube = pointer_to_array(cube_, npar)
+    cube = unsafe_wrap(Array,cube_, npar)
     nested = unsafe_pointer_to_objref(nested_)::Nested
     lnew = nested.loglike(cube, nested.context...)
     unsafe_store!(lnew_, lnew)
@@ -104,9 +104,9 @@ function nested_dumper(
     nsamples = unsafe_load(nsamples_)
     nlive = unsafe_load(nlive_)
     npar = unsafe_load(npar_)
-    physlive = pointer_to_array(unsafe_load(physlive_), (nlive, npar+1))
-    posterior = pointer_to_array(unsafe_load(posterior_), (nsamples, npar+2))
-    paramconstr = pointer_to_array(unsafe_load(paramconstr_), (npar, 4))
+    physlive = unsafe_wrap(Array,unsafe_load(physlive_), (nlive, Int32(npar+1)))
+    posterior = unsafe_wrap(Array,unsafe_load(posterior_), (nsamples, Int32(npar+2)))
+    paramconstr = unsafe_wrap(Array,unsafe_load(paramconstr_), (npar, Int32(4)))
     maxloglike = unsafe_load(maxloglike_)
     logz = unsafe_load(logz_)
     inslogz = unsafe_load(inslogz_)
@@ -166,7 +166,7 @@ function nested(
     if !isdir(root_dir)
         mkdir(root_dir)
     end
-    
+
     # convert arguments to the necessary representation
     ins_c = @logical ins
     mmodal_c = @logical mmodal
@@ -177,7 +177,7 @@ function nested(
     resume_c = @logical resume
     outfile_c = @logical outfile
     initmpi_c = @logical initmpi
-    
+
     # sanity checks
     ndim > 0 || error("ndim must be positive")
     nlive > 0 || error("nlive must be positive")
@@ -189,7 +189,7 @@ function nested(
     updint > 0 || error("updint must be positive")
     size(wrap_c) == (ndim,) || error("size of wrap does not match ndim")
     maxiter >= 0 || error("maxiter must be positive or zero for no maximum")
-    
+
     # create Nested object
     Nested(ins_c, mmodal_c, ceff_c, nlive, tol, efr, ndim, npar, nclspar,
            maxmodes, updint, ztol, root_c, seed, wrap_c, fb_c, resume_c,
@@ -202,22 +202,22 @@ end
         loglike_c = cfunction(nested_loglike, Void, (
             Ptr{Cdouble}, Ptr{Cint}, Ptr{Cint}, Ptr{Cdouble}, Ptr{Void}
         ))
-        
+
         dumper_c = cfunction(nested_dumper, Void, (
             Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Ptr{Cdouble}},
             Ptr{Ptr{Cdouble}}, Ptr{Ptr{Cdouble}}, Ptr{Cdouble},
             Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Void}
         ))
-        
-        ccall($nestrun_ptr, Void, ( Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
-              Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cint}, Ptr{Cint},
-              Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cdouble}, Ptr{Uint8},
-              Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
-              Ptr{Cdouble}, Ptr{Cint}, Ptr{Void}, Ptr{Void}, Any ),
-              &n.ins, &n.mmodal, &n.ceff, &n.nlive, &n.tol, &n.efr,
-              &n.ndim, &n.npar, &n.nclspar, &n.maxmodes, &n.updint, &n.ztol,
-              n.root, &n.seed, n.wrap, &n.fb, &n.resume, &n.outfile, &n.initmpi,
-              &n.logzero, &n.maxiter, loglike_c, dumper_c, n)
+
+        ccall($nestrun_ptr, Void, ( Ref{Cint}, Ref{Cint}, Ref{Cint},
+              Ref{Cint}, Ref{Cdouble}, Ref{Cdouble}, Ref{Cint}, Ref{Cint},
+              Ref{Cint}, Ref{Cint}, Ref{Cint}, Ref{Cdouble}, Ptr{UInt8},
+              Ref{Cint}, Ptr{Cint}, Ref{Cint}, Ref{Cint}, Ref{Cint}, Ref{Cint},
+              Ref{Cdouble}, Ref{Cint}, Ptr{Void}, Ptr{Void}, Any ),
+              n.ins, n.mmodal, n.ceff, n.nlive, n.tol, n.efr,
+              n.ndim, n.npar, n.nclspar, n.maxmodes, n.updint, n.ztol,
+              n.root, n.seed, n.wrap, n.fb, n.resume, n.outfile, n.initmpi,
+              n.logzero, n.maxiter, loglike_c, dumper_c, n)
     end
 end
 

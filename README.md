@@ -66,7 +66,7 @@ location known as follows:
 
 ```julia
 # make library location known
-push!(DL_LOAD_PATH, "/path/to/MultiNest")
+push!(Libdl.DL_LOAD_PATH, "/path/to/MultiNest")
 
 # now load MultiNest module
 using MultiNest
