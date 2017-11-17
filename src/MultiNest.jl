@@ -39,7 +39,7 @@ const nestrun_ptr = nested_symbol()
 
 # convert to Fortran logical
 macro logical(x)
-    :(convert(Cint, $x != 0))
+    esc(:(convert(Cint, $x != 0)))
 end
 
 # this holds all the information to run MultiNest
